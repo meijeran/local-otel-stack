@@ -1,0 +1,35 @@
+﻿version: '3.8'
+services:
+  weatherapi:
+    image: weatherapi
+    build:
+      context: src/
+      dockerfile: Dockerfile
+    environment:
+        - OTEL_COLLECTOR_ENDPOINT=http://otel-collector:4317
+    ports:
+        - "8080:80"
+  
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - ./config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "13133:13133"
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686" # Port for User Interface
+  
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./config/prometheus-config.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090" # Port for User Interface
