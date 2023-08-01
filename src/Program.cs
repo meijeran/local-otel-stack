@@ -25,7 +25,7 @@ builder.Services.AddOpenTelemetry()
    .WithTracing(tracing => tracing
         .AddConsoleExporter()
         .AddAspNetCoreInstrumentation()
-        .SetResourceBuilder(resourceBuilder)
+        //.SetResourceBuilder(resourceBuilder)
         .AddSource("weather-service")
         .AddOtlpExporter(exporter =>exporter.Endpoint = new Uri(otelEndpoint)))
    .WithMetrics(metrics =>
@@ -34,9 +34,9 @@ builder.Services.AddOpenTelemetry()
         {
             metrics.AddConsoleExporter();
         }
-        metrics.SetResourceBuilder(resourceBuilder)
-         .AddMeter("WeatherMeter")
-         .AddOtlpExporter(exporter => exporter.Endpoint = new Uri(otelEndpoint));
+        //metrics.SetResourceBuilder(resourceBuilder)
+         metrics.AddMeter("WeatherMeter")
+                .AddOtlpExporter(exporter => exporter.Endpoint = new Uri(otelEndpoint));
     });
 
 var app = builder.Build();
