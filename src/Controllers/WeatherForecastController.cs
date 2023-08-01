@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WeatherApi.Controllers;
@@ -14,23 +12,19 @@ public class WeatherForecastController : ControllerBase
     };
 
     private readonly ILogger<WeatherForecastController> _logger;
-    private readonly Counter<long> _weatherRequestCounter;
-    private readonly ActivitySource _activitySource;
+    private readonly WeatherMeter _weatherMeter;
 
-
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, WeatherMeter weatherMeter)
     {
         _logger = logger;
-        var meter = new Meter("WeatherMeter");
-        _weatherRequestCounter = meter.CreateCounter<long>("weather_requests_total");
-        _activitySource = new ActivitySource("weather-service");
+        _weatherMeter = weatherMeter;
     }
 
     [HttpGet(Name = "GetWeatherForecast")]
     public IEnumerable<WeatherForecast> Get()
     {
-        using var activity = _activitySource.StartActivity("GetWeatherForecast");
-        _weatherRequestCounter.Add(1);
+        using var activity = Diagnostics.WeatherServiceActivitySource.StartActivity("GetWeatherForecast");
+        _weatherMeter.GetWeatherForecast();
             
         _logger.LogInformation("GetWeatherForecast called");
         return Enumerable.Range(1, 5).Select(index => new WeatherForecast

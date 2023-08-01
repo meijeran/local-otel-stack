@@ -1,6 +1,7 @@
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using WeatherApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddSingleton(new WeatherMeter());
 var otelEndpoint = Environment.GetEnvironmentVariable("OTEL_COLLECTOR_ENDPOINT");
 if (string.IsNullOrEmpty(otelEndpoint))
 {
@@ -25,7 +27,6 @@ builder.Services.AddOpenTelemetry()
    .WithTracing(tracing => tracing
         .AddConsoleExporter()
         .AddAspNetCoreInstrumentation()
-        //.SetResourceBuilder(resourceBuilder)
         .AddSource("weather-service")
         .AddOtlpExporter(exporter =>exporter.Endpoint = new Uri(otelEndpoint)))
    .WithMetrics(metrics =>
@@ -34,9 +35,8 @@ builder.Services.AddOpenTelemetry()
         {
             metrics.AddConsoleExporter();
         }
-        //metrics.SetResourceBuilder(resourceBuilder)
-         metrics.AddMeter("WeatherMeter")
-                .AddOtlpExporter(exporter => exporter.Endpoint = new Uri(otelEndpoint));
+        metrics.AddMeter(WeatherMeter.Name)
+           .AddOtlpExporter(exporter => exporter.Endpoint = new Uri(otelEndpoint));
     });
 
 var app = builder.Build();
